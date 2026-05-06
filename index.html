@@ -1421,13 +1421,17 @@ Latifah		M	M	L	L	P"></textarea>
                 }
             });
             
-            // Reset ratio classes on card
+            // Reset ratio classes and inline heights on card
             exportCard.classList.remove('ratio-iphone', 'ratio-android');
             
             if (ratio === 'iphone') {
+                exportCard.style.height = '2340px';
                 exportCard.classList.add('ratio-iphone');
             } else if (ratio === 'android') {
+                exportCard.style.height = '2400px';
                 exportCard.classList.add('ratio-android');
+            } else {
+                exportCard.style.height = '1920px';
             }
         }
 
@@ -1893,12 +1897,22 @@ Latifah		M	M	L	L	P"></textarea>
             await new Promise(resolve => setTimeout(resolve, 300));
 
             try {
+                // Determine absolute height for html2canvas to render
+                let captureHeight = 1920;
+                if (activeWallpaperRatio === 'iphone') {
+                    captureHeight = 2340;
+                } else if (activeWallpaperRatio === 'android') {
+                    captureHeight = 2400;
+                }
+
                 // Render offscreen canvas with HTML2Canvas using high density scaling (retina export)
                 const canvas = await html2canvas(exportCard, {
                     scale: 2,               // Double the resolution for crystal-clear texts
                     useCORS: true,          // Allow cross-origin style/font CDNs
                     logging: false,         // Disable logs
-                    backgroundColor: '#090d16' // Set premium base theme color
+                    backgroundColor: '#090d16', // Set premium base theme color
+                    width: 1080,            // Explicitly force rendering canvas width
+                    height: captureHeight   // Explicitly force rendering canvas height
                 });
 
                 // Generate JPG and trigger download
