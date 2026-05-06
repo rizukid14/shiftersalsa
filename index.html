@@ -641,9 +641,7 @@
         }
 
         #export-wallpaper-card {
-            position: fixed; /* Fixed elements are out of the document flow and never trigger page scrolling */
-            left: -9999px;
-            top: -9999px;
+            position: relative; /* Change from fixed to relative to render within the infinite-space wrapper */
             display: flex; /* Kept display:flex so html2canvas can render it perfectly instead of blank */
             width: 1080px;
             height: 1920px;
@@ -983,7 +981,7 @@
         }
 
         #export-wallpaper-card.ratio-iphone .export-grid-cell {
-            aspect-ratio: 1 / 1.15; /* Balanced vertical stretch to fill screen without colliding */
+            aspect-ratio: 1 / 1.10; /* Clean vertical stretch tailored to fit iPhone lockscreen layouts */
             padding: 18px 14px;
         }
         #export-wallpaper-card.ratio-iphone .export-cell-date {
@@ -1000,7 +998,7 @@
         }
 
         #export-wallpaper-card.ratio-android .export-grid-cell {
-            aspect-ratio: 1 / 1.18; /* Perfect vertical stretch to fit 20:9 screen space majestically */
+            aspect-ratio: 1 / 1.12; /* Pristine vertical ratio tailored for tall 20:9 flagship Androids */
             padding: 20px 14px;
         }
         #export-wallpaper-card.ratio-android .export-cell-date {
@@ -1227,8 +1225,9 @@ Latifah		M	M	L	L	P"></textarea>
         </section>
     </main>
 
-    <!-- HIDDEN PORTRAIT WALLPAPER CONTAINER (1080x1920) -->
-    <div id="export-wallpaper-card">
+    <!-- HIDDEN PORTRAIT WALLPAPER CONTAINER (COORDINATE-SAFE WRAPPER) -->
+    <div style="position: absolute; width: 0; height: 0; overflow: hidden; left: -9999px; top: -9999px;">
+        <div id="export-wallpaper-card">
         <div class="export-header">
             <div class="brand-tag">Shift Calendar</div>
             <h2 id="export-brand-title">Jadwal Shift Kerja</h2>
@@ -1293,6 +1292,7 @@ Latifah		M	M	L	L	P"></textarea>
             <div class="export-watermark">Made with love by RizukiD</div>
         </div>
     </div>
+</div>
 
     <!-- CORE ENGINE JAVASCRIPT -->
     <script>
