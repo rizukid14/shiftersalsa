@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Calendar - Generator Wallpaper Jadwal</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2canvas CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        /* CSS RESET & VARIABLES */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-primary: #6366f1;
+            --accent-primary-hover: #4f46e5;
+            --danger-color: #ef4444;
+            --sunday-bg: #e53935;
+            
+            /* Shift Colors */
+            --color-p-bg: #4ade80; /* Vibrant mint green */
+            --color-p-text: #064e3b; /* Deep forest green for high contrast readability */
+            --color-md-bg: #ffb74d;
+            --color-md-text: #5d4037;
+            --color-s-bg: #ff8a65;
+            --color-s-text: #3e2723;
+            --color-m-bg: #5c6bc0;
+            --color-m-text: #ffffff;
+            --color-l-bg: #b0bec5;
+            --color-l-text: #37474f;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+            padding: 1.5rem 1.5rem 5rem 1.5rem; /* Generous bottom padding to prevent bottom navigation overlaps */
+        }
+
+        /* CONTAINER DESIGN */
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* HEADER DESIGN */
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* CARD BASICS */
+        .glass-card {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fff;
+        }
+
+        /* INPUT PANEL TABS */
+        .input-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: fit-content;
+        }
+
+        .tab-headers {
+            display: flex;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 0.5rem;
+            padding: 0.25rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* PASTE TEXTAREA AREA */
+        .textarea-container {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 180px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            padding: 0.875rem;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.825rem;
+            resize: vertical;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        /* FILE UPLOAD DRAG-DROP AREA */
+        .drag-drop-zone {
+            width: 100%;
+            height: 180px;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(15, 23, 42, 0.3);
+            color: var(--text-secondary);
+        }
+
+        .drag-drop-zone:hover, .drag-drop-zone.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.05);
+            color: #fff;
+        }
+
+        .drag-drop-zone svg {
+            width: 40px;
+            height: 40px;
+            stroke: currentColor;
+            opacity: 0.6;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .drag-drop-zone:hover svg {
+            transform: translateY(-4px);
+            opacity: 1;
+        }
+
+        .drag-drop-zone p {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .drag-drop-zone span {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .file-info-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .file-info-box svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent-primary);
+            flex-shrink: 0;
+        }
+
+        /* EXCEL SHEET SELECTOR */
+        .sheet-selector-container, .employee-selector-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+            margin-top: 1rem;
+        }
+
+        .sheet-selector-container label, .employee-selector-container label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .glass-select {
+            background: #111827;
+            border: 1px solid var(--card-border);
+            border-radius: 0.5rem;
+            padding: 0.625rem 0.75rem;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            outline: none;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .glass-select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+        }
+
+        button.btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-primary), #4f46e5);
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.875rem;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            margin-top: 1rem;
+        }
+
+        button.btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        button.btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* SHIFT CODES LEGEND */
+        .legend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.825rem;
+        }
+
+        .shift-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 28px;
+            border-radius: 0.375rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .shift-badge.p { background: var(--color-p-bg); color: var(--color-p-text); }
+        .shift-badge.md { background: var(--color-md-bg); color: var(--color-md-text); }
+        .shift-badge.s { background: var(--color-s-bg); color: var(--color-s-text); }
+        .shift-badge.m { background: var(--color-m-bg); color: var(--color-m-text); }
+        .shift-badge.l { 
+            background: var(--color-l-bg); 
+            color: var(--color-l-text);
+            text-decoration: line-through;
+        }
+
+        .legend-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .legend-label {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .legend-time {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        /* MAIN CALENDAR DISPLAY PANEL */
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* MONTH SELECTION INFERENCE */
+        .title-customization {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            justify-content: space-between;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .month-title-input {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            width: 200px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .month-title-input:focus {
+            border-color: var(--accent-primary);
+        }
+
+        /* PORTRAIT WEEKLY CALENDAR GRID STYLE */
+        .portrait-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .grid-header {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--card-border);
+            text-transform: uppercase;
+            min-width: 0; /* Prevents grid column expansion */
+        }
+
+        .grid-header.sunday {
+            color: var(--danger-color);
+        }
+
+        .grid-cell {
+            aspect-ratio: 1 / 1.15;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.4);
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 0; /* Allows cell to shrink dynamically in grid */
+        }
+
+        .grid-cell.empty {
+            border: none;
+            background: none;
+            pointer-events: none;
+        }
+
+        .cell-date {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .cell-badge {
+            align-self: center;
+            font-size: 0.875rem;
+            font-weight: 700;
+            width: 100%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; /* Gracefully truncates long strings like L TGL 26 */
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                padding: 0.75rem 0.75rem 6rem 0.75rem; /* Large bottom margin so users can scroll way past the browser bottom bar */
+            }
+            .glass-card {
+                padding: 1rem;
+            }
+            .portrait-calendar-grid {
+                gap: 5px;
+            }
+            .grid-cell {
+                padding: 6px 4px;
+                border-radius: 6px;
+            }
+            .cell-date {
+                font-size: 0.65rem;
+            }
+            .cell-badge {
+                font-size: 0.75rem;
+            }
+            .title-customization {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            .month-title-input {
+                width: 100%;
+            }
+        }
+
+        /* Color classes for each shift type - Soft glow theme */
+        /* Color classes for each shift type - Solid Bright Card Fills */
+        .grid-cell.shift-P {
+            background: var(--color-p-bg);
+            border: none;
+            box-shadow: 0 4px 10px rgba(74, 222, 128, 0.15);
+        }
+        .grid-cell.shift-P .cell-date { color: var(--color-p-text); }
+        .grid-cell.shift-P .cell-badge { color: var(--color-p-text); }
+
+        .grid-cell.shift-MD {
+            background: var(--color-md-bg);
+            border: none;
+            box-shadow: 0 4px 10px rgba(255, 183, 77, 0.15);
+        }
+        .grid-cell.shift-MD .cell-date { color: var(--color-md-text); }
+        .grid-cell.shift-MD .cell-badge { color: var(--color-md-text); }
+
+        .grid-cell.shift-S {
+            background: var(--color-s-bg);
+            border: none;
+            box-shadow: 0 4px 10px rgba(255, 138, 101, 0.15);
+        }
+        .grid-cell.shift-S .cell-date { color: var(--color-s-text); }
+        .grid-cell.shift-S .cell-badge { color: var(--color-s-text); }
+
+        .grid-cell.shift-M {
+            background: var(--color-m-bg);
+            border: none;
+            box-shadow: 0 4px 10px rgba(92, 107, 192, 0.15);
+        }
+        .grid-cell.shift-M .cell-date { color: var(--color-m-text); }
+        .grid-cell.shift-M .cell-badge { color: var(--color-m-text); }
+
+        .grid-cell.shift-L {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .grid-cell.shift-L .cell-date { color: rgba(255,255,255,0.3); text-decoration: line-through; }
+        .grid-cell.shift-L .cell-badge { color: rgba(255,255,255,0.25); font-size: 0.65rem; text-decoration: line-through; }
+
+        .grid-cell.sunday-cell {
+            border: 2px solid #ff1744 !important;
+        }
+        .grid-cell.sunday-cell .cell-date {
+            color: #ff1744 !important;
+        }
+
+        /* Tooltip styling for portrait cell */
+        .grid-cell[data-tooltip] {
+            cursor: pointer;
+        }
+
+        .grid-cell[data-tooltip]::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-6px);
+            background: #1e293b;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 400;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            z-index: 20;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .grid-cell[data-tooltip]:hover::before {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .grid-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        /* ACTION BOXES */
+        .actions-panel {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem;
+            padding: 0.875rem 1.75rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.625rem;
+            width: 100%;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-download:hover {
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-download:active {
+            transform: translateY(0);
+        }
+
+        /* EMPTY STATE STYLE */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            stroke: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        #export-wallpaper-card {
+            position: fixed; /* Fixed elements are out of the document flow and never trigger page scrolling */
+            left: -9999px;
+            top: -9999px;
+            display: flex; /* Kept display:flex so html2canvas can render it perfectly instead of blank */
+            width: 1080px;
+            height: 1920px;
+            background: #090d16;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.22) 0px, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(244, 63, 94, 0.18) 0px, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95) 0px, #090d16 100%);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 120px 60px 100px 60px;
+            box-sizing: border-box;
+        }
+
+        .export-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .export-header .brand-tag {
+            font-size: 24px;
+            letter-spacing: 8px;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .export-header h2 {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: 2.5px;
+            color: #ffffff; /* Solid professional white */
+            text-shadow: 0 4px 20px rgba(99, 102, 241, 0.45); /* distinct subtle deep-indigo backdrop glow */
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .export-header p {
+            font-size: 32px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .export-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 50px 0;
+        }
+
+        /* Large Grid optimized for Wallpaper width (No Tables!) */
+        .export-table-container {
+            width: 100%;
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
+        }
+
+        .export-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        .export-grid-header {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #9ca3af;
+            padding: 15px 0;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.15);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .export-grid-header.sunday {
+            color: #ff1744;
+        }
+
+        .export-grid-cell {
+            aspect-ratio: 1 / 1.18;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+
+        .export-grid-cell.empty {
+            border: none;
+            background: none;
+        }
+
+        .export-cell-date {
+            font-size: 22px;
+            font-weight: 700;
+            color: #9ca3af;
+        }
+
+        .export-cell-badge {
+            align-self: center;
+            font-size: 38px;
+            font-weight: 800;
+        }
+
+        /* Large Wallpaper cells color design - Solid Bright Card Fills */
+        .export-grid-cell.shift-P {
+            background: #00b0ff;
+            border: none;
+            box-shadow: 0 8px 25px rgba(0, 176, 255, 0.25);
+        }
+        .export-grid-cell.shift-P .export-cell-date { color: #002d40; }
+        .export-grid-cell.shift-P .export-cell-badge { color: #002d40; }
+
+        .export-grid-cell.shift-MD {
+            background: #ffb300;
+            border: none;
+            box-shadow: 0 8px 25px rgba(255, 179, 0, 0.25);
+        }
+        .export-grid-cell.shift-MD .export-cell-date { color: #2d1d00; }
+        .export-grid-cell.shift-MD .export-cell-badge { color: #2d1d00; }
+
+        .export-grid-cell.shift-S {
+            background: #ff5722;
+            border: none;
+            box-shadow: 0 8px 25px rgba(255, 87, 34, 0.25);
+        }
+        .export-grid-cell.shift-S .export-cell-date { color: #ffffff; }
+        .export-grid-cell.shift-S .export-cell-badge { color: #ffffff; }
+
+        .export-grid-cell.shift-M {
+            background: #3f51b5;
+            border: none;
+            box-shadow: 0 8px 25px rgba(63, 81, 181, 0.25);
+        }
+        .export-grid-cell.shift-M .export-cell-date { color: #ffffff; }
+        .export-grid-cell.shift-M .export-cell-badge { color: #ffffff; }
+
+        .export-grid-cell.shift-L {
+            background: #1e293b;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+        }
+        .export-grid-cell.shift-L .export-cell-date { color: rgba(255,255,255,0.35); text-decoration: line-through; }
+        .export-grid-cell.shift-L .export-cell-badge { color: rgba(255,255,255,0.25); font-size: 16px; text-decoration: line-through; }
+
+        .export-grid-cell.sunday-cell {
+            border: 3px solid #ff1744 !important;
+        }
+        .export-grid-cell.sunday-cell .export-cell-date {
+            color: #ff1744 !important;
+        }
+
+        /* Wallpaper Footer & Legend - Spacious 2-Row Layout */
+        .export-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            padding-top: 45px;
+        }
+
+        .export-legend-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .export-legend-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .export-legend-item {
+            background: rgba(17, 24, 39, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 22px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            width: 300px; /* Massive uniform width for balanced look */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .export-legend-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .export-legend-item .export-shift-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 68px; /* Wider and bigger badge */
+            height: 52px;
+            font-size: 22px;
+            font-weight: 800;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .export-legend-item .export-shift-badge.P { background: var(--color-p-bg); color: var(--color-p-text); }
+        .export-legend-item .export-shift-badge.MD { background: var(--color-md-bg); color: var(--color-md-text); }
+        .export-legend-item .export-shift-badge.S { background: var(--color-s-bg); color: var(--color-s-text); }
+        .export-legend-item .export-shift-badge.M { background: var(--color-m-bg); color: var(--color-m-text); }
+        .export-legend-item .export-shift-badge.L { 
+            background: var(--color-l-bg); 
+            color: var(--color-l-text);
+            text-decoration: line-through;
+        }
+
+        .export-legend-title {
+            font-weight: 700;
+            font-size: 20px;
+            color: #ffffff;
+        }
+
+        .export-legend-desc {
+            font-size: 14px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .export-watermark {
+            text-align: center;
+            font-size: 15px;
+            color: #4b5563;
+            letter-spacing: 3px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-container">
+        <div>
+            <h1>Shift Calendar</h1>
+            <p>Ubah jadwal Excel kerja Anda menjadi Wallpaper HP cantik dalam sekejap.</p>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- LEFT PANEL: INPUTS & LEGEND -->
+        <section class="input-panel glass-card">
+            <h2 class="section-title">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Input Data Jadwal
+            </h2>
+
+            <!-- Toggle Tabs for input style -->
+            <div class="tab-headers">
+                <button class="tab-btn active" onclick="switchTab('paste-tab')">Salin-Tempel (Paste)</button>
+                <button class="tab-btn" onclick="switchTab('upload-tab')">Unggah File (.xlsx)</button>
+            </div>
+            
+            <!-- Paste Tab Content -->
+            <div id="paste-tab" class="tab-content active">
+                <div class="textarea-container">
+                    <textarea id="excel-paste-input" placeholder="Salin baris jadwal dari Excel lalu tempel di sini...
+
+Contoh format:
+	21	22	23	24	25
+	KAMIS	JUMAT	SABTU	MINGGU	SENIN
+Fida		MD	MD	P	L	P
+Latifah		M	M	L	L	P"></textarea>
+                </div>
+                <button class="btn-primary" id="btn-parse">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4H18v3"></path>
+                    </svg>
+                    Proses Jadwal Paste
+                </button>
+            </div>
+
+            <!-- Upload File Tab Content -->
+            <div id="upload-tab" class="tab-content">
+                <div class="drag-drop-zone" id="drop-zone">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p id="drop-text">Letakkan file Excel (.xlsx) di sini</p>
+                    <span>Atau klik untuk memilih berkas dari komputer</span>
+                    <input type="file" id="file-input" accept=".xlsx, .xls, .csv" style="display: none;">
+                </div>
+
+                <div id="file-info" style="display: none;">
+                    <div class="file-info-box">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span id="uploaded-file-name" style="font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">filename.xlsx</span>
+                    </div>
+                </div>
+
+                <!-- Multiple Sheet Selector -->
+                <div class="sheet-selector-container" id="sheet-selector-container" style="display: none;">
+                    <label for="sheet-selector">Pilih Sheet Excel:</label>
+                    <select id="sheet-selector" class="glass-select">
+                        <!-- Dynamic sheet options populated via JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Single Employee Selector Dropdown (Shown after parsing) -->
+            <div class="employee-selector-container" id="employee-selector-container" style="display: none;">
+                <label for="employee-selector">Pilih Karyawan:</label>
+                <select id="employee-selector" class="glass-select">
+                    <!-- Options populated via JS -->
+                </select>
+            </div>
+
+            <!-- Legend Info -->
+            <h2 class="section-title" style="margin-top: 1rem;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                Keterangan Shift
+            </h2>
+            <div class="legend-list">
+                <div class="legend-item">
+                    <span class="shift-badge p">P</span>
+                    <div class="legend-info">
+                        <span class="legend-label">Pagi (P)</span>
+                        <span class="legend-time">07.00 – 14.00</span>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <span class="shift-badge md">MD</span>
+                    <div class="legend-info">
+                        <span class="legend-label">Middle Day (MD)</span>
+                        <span class="legend-time">10.00 – 17.00</span>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <span class="shift-badge s">S</span>
+                    <div class="legend-info">
+                        <span class="legend-label">Siang/Sore (S)</span>
+                        <span class="legend-time">14.00 – 21.00</span>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <span class="shift-badge m">M</span>
+                    <div class="legend-info">
+                        <span class="legend-label">Malam (M)</span>
+                        <span class="legend-time">21.00 – 07.00</span>
+                    </div>
+                </div>
+                <div class="legend-item">
+                    <span class="shift-badge l">L</span>
+                    <div class="legend-info">
+                        <span class="legend-label">Libur / Off (L)</span>
+                        <span class="legend-time">Tidak Ada Jadwal</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: INTERACTIVE PREVIEW -->
+        <section class="preview-panel glass-card">
+            <div class="title-customization">
+                <h2 class="section-title" style="margin-bottom: 0;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Pratinjau Kalender Portrait
+                </h2>
+                <div>
+                    <label for="month-title" style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Judul Periode:</label>
+                    <input type="text" id="month-title" class="month-title-input" placeholder="Periode Bulan">
+                </div>
+            </div>
+
+            <!-- INTERACTIVE PREVIEW GRID -->
+            <div id="calendar-placeholder" class="empty-state">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"></path>
+                </svg>
+                <p>Silakan tempel data jadwal dari Excel atau unggah file `.xlsx` di panel kiri, kemudian proses untuk menampilkan kalender.</p>
+            </div>
+
+            <!-- 7-Column Grid Container -->
+            <div id="portrait-calendar-container" style="display: none; width: 100%;">
+                <div class="portrait-calendar-grid" id="portrait-calendar-grid">
+                    <!-- Day headers & grid cells are rendered here -->
+                </div>
+            </div>
+
+            <div class="actions-panel" id="actions-panel" style="display: none;">
+                <button class="btn-download" id="btn-download">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    ⬇ Download Kalender HD
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- HIDDEN PORTRAIT WALLPAPER CONTAINER (1080x1920) -->
+    <div id="export-wallpaper-card">
+        <div class="export-header">
+            <div class="brand-tag">Shift Calendar</div>
+            <h2 id="export-brand-title">Jadwal Shift Kerja</h2>
+            <p id="export-brand-subtitle">Mei – Juni 2026</p>
+        </div>
+
+        <div class="export-content">
+            <div class="export-table-container">
+                <div class="export-calendar-grid" id="export-calendar-grid">
+                    <!-- Wallpaper 7-column grid rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="export-footer">
+            <div class="export-legend-container">
+                <!-- Row 1: Pagi, Middle, Sore -->
+                <div class="export-legend-row">
+                    <div class="export-legend-item">
+                        <span class="export-shift-badge P">P</span>
+                        <div class="export-legend-info">
+                            <span class="export-legend-title">Pagi</span>
+                            <span class="export-legend-desc">07.00 – 14.00</span>
+                        </div>
+                    </div>
+                    <div class="export-legend-item">
+                        <span class="export-shift-badge MD">MD</span>
+                        <div class="export-legend-info">
+                            <span class="export-legend-title">Middle</span>
+                            <span class="export-legend-desc">10.00 – 17.00</span>
+                        </div>
+                    </div>
+                    <div class="export-legend-item">
+                        <span class="export-shift-badge S">S</span>
+                        <div class="export-legend-info">
+                            <span class="export-legend-title">Sore</span>
+                            <span class="export-legend-desc">14.00 – 21.00</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Row 2: Malam, Libur -->
+                <div class="export-legend-row">
+                    <div class="export-legend-item">
+                        <span class="export-shift-badge M">M</span>
+                        <div class="export-legend-info">
+                            <span class="export-legend-title">Malam</span>
+                            <span class="export-legend-desc">21.00 – 07.00</span>
+                        </div>
+                    </div>
+                    <div class="export-legend-item">
+                        <span class="export-shift-badge L">L</span>
+                        <div class="export-legend-info">
+                            <span class="export-legend-title">Libur</span>
+                            <span class="export-legend-desc">OFF</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="export-watermark">Made with &lt;3 by RizukiD</div>
+        </div>
+    </div>
+
+    <!-- CORE ENGINE JAVASCRIPT -->
+    <script>
+        // DOM REFERENCES
+        const excelInput = document.getElementById('excel-paste-input');
+        const btnParse = document.getElementById('btn-parse');
+        const monthTitleInput = document.getElementById('month-title');
+        const placeholder = document.getElementById('calendar-placeholder');
+        
+        // Single Employee Selector Selector DOM
+        const employeeSelectorContainer = document.getElementById('employee-selector-container');
+        const employeeSelector = document.getElementById('employee-selector');
+
+        // Grid containers
+        const portraitCalendarContainer = document.getElementById('portrait-calendar-container');
+        const portraitCalendarGrid = document.getElementById('portrait-calendar-grid');
+        const actionsPanel = document.getElementById('actions-panel');
+        const btnDownload = document.getElementById('btn-download');
+
+        // Drag Drop & File upload elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const uploadedFileName = document.getElementById('uploaded-file-name');
+        const sheetSelectorContainer = document.getElementById('sheet-selector-container');
+        const sheetSelector = document.getElementById('sheet-selector');
+
+        // Wallpaper Export DOM
+        const exportCard = document.getElementById('export-wallpaper-card');
+        const exportBrandTitle = document.getElementById('export-brand-title');
+        const exportSubtitle = document.getElementById('export-brand-subtitle');
+        const exportCalendarGrid = document.getElementById('export-calendar-grid');
+
+        // CONSTANTS & SHIFT METADATA
+        const WEEKDAYS = { 'SENIN': 0, 'SELASA': 1, 'RABU': 2, 'KAMIS': 3, 'JUMAT': 4, 'SABTU': 5, 'MINGGU': 6 };
+        const WEEKDAY_NAMES_SHORT = ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN'];
+
+        const SHIFT_INFO = {
+            'P': { label: 'Pagi', time: '07.00 – 14.00' },
+            'MD': { label: 'Middle Day', time: '10.00 – 17.00' },
+            'S': { label: 'Siang/Sore', time: '14.00 – 21.00' },
+            'M': { label: 'Malam', time: '21.00 – 07.00' },
+            'L': { label: 'Libur / Off', time: '—' },
+            'OFF': { label: 'Libur / Off', time: '—' }
+        };
+
+        const INDONESIAN_MONTHS = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+
+        // STATE VARIABLES
+        let scheduleData = null;
+        let selectedEmployeeId = null;
+        let currentWorkbook = null;
+
+        // 1. SWITCH INPUT TABS
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            
+            // Find active tab button and activate it
+            const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+                (tabId === 'paste-tab' && btn.textContent.includes('Salin')) ||
+                (tabId === 'upload-tab' && btn.textContent.includes('Unggah'))
+            );
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        // 2. AUTO-DETECT CYCLE MONTH
+        function autoDetectMonthAndYear() {
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentYear = today.getFullYear();
+            
+            let startMonthIdx, endMonthIdx, startYear, endYear;
+
+            if (currentDay <= 20) {
+                // Cycle: Previous Month 21 -> Current Month 20
+                startMonthIdx = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+                endMonthIdx = today.getMonth();
+                startYear = today.getMonth() === 0 ? currentYear - 1 : currentYear;
+                endYear = currentYear;
+            } else {
+                // Cycle: Current Month 21 -> Next Month 20
+                startMonthIdx = today.getMonth();
+                endMonthIdx = today.getMonth() === 11 ? 0 : today.getMonth() + 1;
+                startYear = currentYear;
+                endYear = today.getMonth() === 11 ? currentYear + 1 : currentYear;
+            }
+
+            const startMonthName = INDONESIAN_MONTHS[startMonthIdx];
+            const endMonthName = INDONESIAN_MONTHS[endMonthIdx];
+
+            let displayTitle = '';
+            if (startMonthIdx === endMonthIdx) {
+                displayTitle = `${startMonthName} ${currentYear}`;
+            } else {
+                const yearSuffix = startYear === endYear ? ` ${endYear}` : ` ${startYear}/${endYear}`;
+                displayTitle = `${startMonthName} – ${endMonthName}${yearSuffix}`;
+            }
+
+            monthTitleInput.value = displayTitle;
+            updateExportSubtitle();
+        }
+
+        // Initialize Title
+        autoDetectMonthAndYear();
+
+        // Sync visual subtitle on title edit
+        monthTitleInput.addEventListener('input', updateExportSubtitle);
+
+        function updateExportSubtitle() {
+            exportSubtitle.textContent = monthTitleInput.value || "Jadwal Shift Kerja";
+        }
+
+        // 3. UNIFIED PARSER CORE
+        // Processes a 2D array of values (rows where each row is an array of cells)
+        function parseGridData(rows) {
+            if (!rows || rows.length < 3) return null;
+
+            const dateRow = rows[0];
+            const dayRow = rows[1];
+
+            // Build schedule columns (skip index 0 as it maps to employee names)
+            const columns = [];
+            const maxCols = Math.max(dateRow.length, dayRow.length);
+
+            for (let i = 1; i < maxCols; i++) {
+                const rawDate = dateRow[i] !== undefined && dateRow[i] !== null ? String(dateRow[i]).trim() : '';
+                const rawDay = dayRow[i] !== undefined && dayRow[i] !== null ? String(dayRow[i]).trim().toUpperCase() : '';
+
+                // We keep columns that have either a date or a day name
+                if (rawDate || rawDay) {
+                    columns.push({
+                        index: i,
+                        date: rawDate,
+                        dayName: rawDay,
+                        isSunday: rawDay === 'MINGGU'
+                    });
+                }
+            }
+
+            // Parse employee rows
+            const employees = [];
+            for (let j = 2; j < rows.length; j++) {
+                const rowCells = rows[j];
+                if (!rowCells || rowCells.length === 0 || (rowCells.length === 1 && String(rowCells[0]).trim() === '')) continue;
+
+                const empName = rowCells[0] !== undefined && rowCells[0] !== null ? String(rowCells[0]).trim() : '';
+                if (!empName) continue;
+
+                // Extract shift codes matching the columns
+                const shifts = columns.map(col => {
+                    const rawCode = rowCells[col.index] !== undefined && rowCells[col.index] !== null ? String(rowCells[col.index]).trim().toUpperCase() : '';
+                    return {
+                        date: col.date,
+                        dayName: col.dayName,
+                        shiftCode: rawCode
+                    };
+                });
+
+                employees.push({
+                    id: `emp_${j}_${encodeURIComponent(empName)}`,
+                    name: empName,
+                    shifts: shifts
+                });
+            }
+
+            return {
+                columns: columns,
+                employees: employees
+            };
+        }
+
+        // 4. FILE DRAG & DROP / FILE SELECTION EVENTS
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleUploadedFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleUploadedFile(files[0]);
+            }
+        });
+
+        function handleUploadedFile(file) {
+            uploadedFileName.textContent = file.name;
+            fileInfo.style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    currentWorkbook = workbook;
+
+                    // Show sheet selector
+                    sheetSelector.innerHTML = '';
+                    workbook.SheetNames.forEach(sheetName => {
+                        const option = document.createElement('option');
+                        option.value = sheetName;
+                        option.textContent = sheetName;
+                        sheetSelector.appendChild(option);
+                    });
+
+                    sheetSelectorContainer.style.display = 'flex';
+
+                    // Parse the first sheet by default
+                    loadExcelSheet(workbook.SheetNames[0]);
+                } catch (err) {
+                    console.error("Error reading Excel:", err);
+                    alert("Gagal membaca file Excel. Pastikan file tidak rusak.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Parse a specific Excel sheet
+        function loadExcelSheet(sheetName) {
+            if (!currentWorkbook) return;
+            
+            const sheet = currentWorkbook.Sheets[sheetName];
+            // Convert to 2D array of rows
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            
+            const parsed = parseGridData(rows);
+            if (!parsed) {
+                alert(`Format data pada sheet "${sheetName}" tidak sesuai! Pastikan baris 1 berisi tanggal, baris 2 berisi hari (KAMIS, JUMAT...), dan baris berikutnya adalah nama karyawan.`);
+                return;
+            }
+
+            processAndRenderState(parsed);
+        }
+
+        // Handle sheet selector change
+        sheetSelector.addEventListener('change', (e) => {
+            loadExcelSheet(e.target.value);
+        });
+
+        // 5. TRIGGER PASTED EXCEL DATA PARSE BUTTON
+        btnParse.addEventListener('click', () => {
+            const rawText = excelInput.value;
+            if (!rawText.trim()) {
+                alert("Silakan tempel data jadwal terlebih dahulu.");
+                return;
+            }
+
+            // Convert pasted tab-separated string into a 2D array
+            const rows = rawText.split(/\r?\n/).map(row => row.split('\t'));
+            const parsed = parseGridData(rows);
+
+            if (!parsed) {
+                alert("Format data tidak dikenal! Harap salin dari Excel dengan benar (minimal terdiri dari 3 baris: Tanggal, Nama Hari, dan Nama Karyawan dengan Jadwal).");
+                return;
+            }
+
+            processAndRenderState(parsed);
+        });
+
+        // 6. PROCESS PARSED DATA & INITIALIZE STATE
+        function processAndRenderState(parsed) {
+            scheduleData = parsed;
+            
+            // Populates single employee selector options
+            employeeSelector.innerHTML = '';
+            scheduleData.employees.forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = emp.name;
+                employeeSelector.appendChild(option);
+            });
+
+            // Set default selected employee to the first one in the list
+            if (scheduleData.employees.length > 0) {
+                selectedEmployeeId = scheduleData.employees[0].id;
+                employeeSelector.value = selectedEmployeeId;
+            }
+
+            // Render calendar portrait grids
+            renderPortraitCalendar();
+
+            // Toggle Visibility
+            placeholder.style.display = 'none';
+            employeeSelectorContainer.style.display = 'flex';
+            portraitCalendarContainer.style.display = 'block';
+            actionsPanel.style.display = 'flex';
+        }
+
+        // Listen for employee selector change
+        employeeSelector.addEventListener('change', (e) => {
+            selectedEmployeeId = e.target.value;
+            renderPortraitCalendar();
+        });
+
+        // 7. RENDER 7-COLUMN PORTRAIT GRID (PREVIEW & EXPORT TEMPLATE)
+        function renderPortraitCalendar() {
+            if (!scheduleData || !selectedEmployeeId) return;
+
+            const { columns, employees } = scheduleData;
+            
+            // Find selected employee object
+            const employee = employees.find(emp => emp.id === selectedEmployeeId);
+            if (!employee) return;
+
+            // Render Interactive Preview Grid
+            renderPortraitGridDOM(columns, employee, portraitCalendarGrid, true);
+
+            // Render Offscreen Export Wallpaper Grid
+            renderPortraitGridDOM(columns, employee, exportCalendarGrid, false);
+
+            // Update exported wallpaper header title with the employee name!
+            exportBrandTitle.textContent = `JADWAL SHIFT ${employee.name.toUpperCase()}`;
+        }
+
+        function renderPortraitGridDOM(columns, employee, targetGrid, isInteractive) {
+            targetGrid.innerHTML = '';
+
+            // A. RENDER WEEKDAY HEADER LABELS (SEN, SEL, RAB, KAM, JUM, SAB, MIN)
+            WEEKDAY_NAMES_SHORT.forEach((dayName, idx) => {
+                const headerEl = document.createElement('div');
+                headerEl.textContent = dayName;
+                
+                if (isInteractive) {
+                    headerEl.className = 'grid-header';
+                    if (idx === 6) headerEl.className += ' sunday';
+                } else {
+                    headerEl.className = 'export-grid-header';
+                    if (idx === 6) headerEl.className += ' sunday';
+                }
+
+                targetGrid.appendChild(headerEl);
+            });
+
+            // B. CALENDAR GRID PLACEMENT MATHEMATICS
+            // Calculate starting column index using the first day's dayName (e.g. KAMIS -> WEEKDAYS['KAMIS'] = 3)
+            const firstColumnObj = columns[0];
+            const startDayName = firstColumnObj.dayName;
+            const startDayIndex = WEEKDAYS[startDayName] !== undefined ? WEEKDAYS[startDayName] : 0;
+
+            // Generate padded cells (empty spacing slots in the first row)
+            for (let i = 0; i < startDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = isInteractive ? 'grid-cell empty' : 'export-grid-cell empty';
+                targetGrid.appendChild(emptyCell);
+            }
+
+            // Generate active date cells
+            columns.forEach((col, idx) => {
+                const shiftObj = employee.shifts[idx] || { shiftCode: '' };
+                const shiftCode = shiftObj.shiftCode;
+
+                const cell = document.createElement('div');
+                
+                if (isInteractive) {
+                    cell.className = `grid-cell shift-${shiftCode}`;
+                    if (col.isSunday) cell.classList.add('sunday-cell');
+                    
+                    // Hover tooltips for interactive mode
+                    if (shiftCode) {
+                        const shiftDetails = SHIFT_INFO[shiftCode] || { label: shiftCode, time: '—' };
+                        cell.setAttribute('data-tooltip', `${shiftDetails.label}: ${shiftDetails.time}`);
+                    }
+                } else {
+                    cell.className = `export-grid-cell shift-${shiftCode}`;
+                    if (col.isSunday) cell.classList.add('sunday-cell');
+                }
+
+                // Render Date Number
+                const dateDiv = document.createElement('div');
+                dateDiv.className = isInteractive ? 'cell-date' : 'export-cell-date';
+                dateDiv.textContent = col.date;
+                cell.appendChild(dateDiv);
+
+                // Render Shift Code Badge (P, MD, S, M, L)
+                const badgeDiv = document.createElement('div');
+                badgeDiv.className = isInteractive ? 'cell-badge' : 'export-cell-badge';
+                badgeDiv.textContent = shiftCode || '-';
+                cell.appendChild(badgeDiv);
+
+                targetGrid.appendChild(cell);
+            });
+        }
+
+        // 8. HD JPG EXPORT VIA HTML2CANVAS
+        btnDownload.addEventListener('click', async () => {
+            // Show loading state
+            btnDownload.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin" style="animation: spin 1s linear infinite;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4H18v3"></path>
+                </svg>
+                Memproses Wallpaper HD...
+            `;
+            btnDownload.disabled = true;
+
+            // Simple spin animation stylesheet injector
+            if (!document.getElementById('spin-keyframes')) {
+                const style = document.createElement('style');
+                style.id = 'spin-keyframes';
+                style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+                document.head.appendChild(style);
+            }
+
+            // Let the DOM update
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            try {
+                // Render offscreen canvas with HTML2Canvas using high density scaling (retina export)
+                const canvas = await html2canvas(exportCard, {
+                    scale: 2,               // Double the resolution for crystal-clear texts
+                    useCORS: true,          // Allow cross-origin style/font CDNs
+                    logging: false,         // Disable logs
+                    backgroundColor: '#090d16' // Set premium base theme color
+                });
+
+                // Generate JPG and trigger download
+                const imageUri = canvas.toDataURL('image/jpeg', 0.95);
+                const employee = scheduleData.employees.find(emp => emp.id === selectedEmployeeId);
+                const employeeNameText = employee ? employee.name.replace(/\s+/g, '_') : 'karyawan';
+                const monthText = (monthTitleInput.value || 'jadwal').replace(/[^a-zA-Z0-9]/g, '_');
+                
+                const link = document.createElement('a');
+                link.download = `Jadwal_Shift_${employeeNameText}_${monthText}.jpg`;
+                link.href = imageUri;
+                link.click();
+            } catch (err) {
+                console.error("Export failed:", err);
+                alert("Gagal mengunduh gambar. Silakan coba kembali.");
+            } finally {
+                // Restore button state
+                btnDownload.innerHTML = `
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    ⬇ Download Kalender HD
+                `;
+                btnDownload.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
