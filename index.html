@@ -975,6 +975,19 @@
         #export-wallpaper-card.theme-light .export-watermark {
             color: #94a3b8;
         }
+
+        /* Wallpaper Aspect Ratio Overrides (Keeps Layout Proportional & Safe for notches) */
+        #export-wallpaper-card.ratio-iphone {
+            height: 2340px; /* iPhone 19.5:9 standard screen height */
+            padding-top: 220px; /* Safe-zone buffer for Dynamic Island & Notch clocks */
+            padding-bottom: 140px; /* Safe-zone buffer for bottom swipe gesture bar */
+        }
+
+        #export-wallpaper-card.ratio-android {
+            height: 2400px; /* Android 20:9 standard screen height */
+            padding-top: 230px; /* Safe-zone buffer for punch-hole cameras & status widgets */
+            padding-bottom: 150px; /* Safe-zone buffer for bottom navigation handles */
+        }
     </style>
 </head>
 <body>
@@ -1164,6 +1177,25 @@ Latifah		M	M	L	L	P"></textarea>
                     </div>
                 </div>
 
+                <!-- Ratio Selection segmented picker -->
+                <div class="ratio-selector-group" style="display: flex; flex-direction: column; gap: 0.5rem; text-align: left;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Ukuran Pas Layar HP (Lockscreen):</span>
+                    <div class="ratio-picker" style="display: flex; background: rgba(15, 23, 42, 0.6); padding: 3px; border-radius: 0.75rem; border: 1px solid var(--card-border); gap: 2px;">
+                        <button class="ratio-opt-btn" id="ratio-classic" onclick="setWallpaperRatio('classic')" style="flex: 1; border: none; padding: 0.625rem 0.25rem; border-radius: 0.6rem; font-family: inherit; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--accent-primary); color: #fff; line-height: 1.2;">
+                            <span style="font-weight: 600;">📺 Klasik</span>
+                            <span style="font-size: 0.6rem; opacity: 0.7; margin-top: 1px;">Rasio 16:9</span>
+                        </button>
+                        <button class="ratio-opt-btn" id="ratio-iphone" onclick="setWallpaperRatio('iphone')" style="flex: 1; border: none; padding: 0.625rem 0.25rem; border-radius: 0.6rem; font-family: inherit; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; color: var(--text-secondary); line-height: 1.2;">
+                            <span style="font-weight: 600;">🍎 iPhone</span>
+                            <span style="font-size: 0.6rem; opacity: 0.7; margin-top: 1px;">Rasio 19.5:9</span>
+                        </button>
+                        <button class="ratio-opt-btn" id="ratio-android" onclick="setWallpaperRatio('android')" style="flex: 1; border: none; padding: 0.625rem 0.25rem; border-radius: 0.6rem; font-family: inherit; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; color: var(--text-secondary); line-height: 1.2;">
+                            <span style="font-weight: 600;">🤖 Android</span>
+                            <span style="font-size: 0.6rem; opacity: 0.7; margin-top: 1px;">Rasio 21:9</span>
+                        </button>
+                    </div>
+                </div>
+
                 <button class="btn-download" id="btn-download" style="width: 100%;">
                     <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -1334,6 +1366,44 @@ Latifah		M	M	L	L	P"></textarea>
                 darkBtn.style.color = 'var(--text-secondary)';
                 
                 exportCard.classList.add('theme-light');
+            }
+        }
+
+        // 1c. SWITCH WALLPAPER ASPECT RATIO (CLASSIC 16:9 / IPHONE 19.5:9 / ANDROID 20:9)
+        let activeWallpaperRatio = 'classic';
+
+        function setWallpaperRatio(ratio) {
+            activeWallpaperRatio = ratio;
+            
+            // Toggle active classes on selector buttons
+            const classicBtn = document.getElementById('ratio-classic');
+            const iphoneBtn = document.getElementById('ratio-iphone');
+            const androidBtn = document.getElementById('ratio-android');
+            const exportCard = document.getElementById('export-wallpaper-card');
+            
+            const buttons = [
+                { btn: classicBtn, val: 'classic' },
+                { btn: iphoneBtn, val: 'iphone' },
+                { btn: androidBtn, val: 'android' }
+            ];
+            
+            buttons.forEach(item => {
+                if (item.val === ratio) {
+                    item.btn.style.background = 'var(--accent-primary)';
+                    item.btn.style.color = '#fff';
+                } else {
+                    item.btn.style.background = 'transparent';
+                    item.btn.style.color = 'var(--text-secondary)';
+                }
+            });
+            
+            // Reset ratio classes on card
+            exportCard.classList.remove('ratio-iphone', 'ratio-android');
+            
+            if (ratio === 'iphone') {
+                exportCard.classList.add('ratio-iphone');
+            } else if (ratio === 'android') {
+                exportCard.classList.add('ratio-android');
             }
         }
 
