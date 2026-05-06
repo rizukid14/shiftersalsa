@@ -160,14 +160,13 @@
             display: block;
         }
 
-        /* PASTE TEXTAREA AREA */
+        /* PASTE TEXTAREA & INPUT AREA */
         .textarea-container {
             position: relative;
         }
 
-        textarea {
+        textarea, .gsheet-input {
             width: 100%;
-            height: 180px;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--card-border);
             border-radius: 0.75rem;
@@ -175,12 +174,17 @@
             color: #fff;
             font-family: inherit;
             font-size: 0.825rem;
-            resize: vertical;
             outline: none;
             transition: all 0.2s ease;
+            box-sizing: border-box;
         }
 
-        textarea:focus {
+        textarea {
+            height: 180px;
+            resize: vertical;
+        }
+
+        textarea:focus, .gsheet-input:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
         }
@@ -909,12 +913,27 @@
 
             <!-- Toggle Tabs for input style -->
             <div class="tab-headers">
-                <button class="tab-btn active" onclick="switchTab('paste-tab')">Salin-Tempel (Paste)</button>
+                <button class="tab-btn active" onclick="switchTab('gsheet-tab')">Google Sheets</button>
                 <button class="tab-btn" onclick="switchTab('upload-tab')">Unggah File (.xlsx)</button>
+                <button class="tab-btn" onclick="switchTab('paste-tab')">Salin-Tempel (Paste)</button>
             </div>
             
+            <!-- Google Sheet Tab Content -->
+            <div id="gsheet-tab" class="tab-content active">
+                <div class="textarea-container" style="margin-bottom: 1rem;">
+                    <label for="gsheet-url" style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Link Google Sheet (Pastikan akses disetel "Siapa saja dengan link dapat melihat"):</label>
+                    <input type="url" id="gsheet-url" class="gsheet-input" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+                </div>
+                <button class="btn-primary" id="btn-gsheet-connect">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                    Koneksikan Google Sheet
+                </button>
+            </div>
+
             <!-- Paste Tab Content -->
-            <div id="paste-tab" class="tab-content active">
+            <div id="paste-tab" class="tab-content">
                 <div class="textarea-container">
                     <textarea id="excel-paste-input" placeholder="Salin baris jadwal dari Excel lalu tempel di sini...
 
@@ -951,14 +970,14 @@ Latifah		M	M	L	L	P"></textarea>
                         <span id="uploaded-file-name" style="font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">filename.xlsx</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Multiple Sheet Selector -->
-                <div class="sheet-selector-container" id="sheet-selector-container" style="display: none;">
-                    <label for="sheet-selector">Pilih Sheet Excel:</label>
-                    <select id="sheet-selector" class="glass-select">
-                        <!-- Dynamic sheet options populated via JS -->
-                    </select>
-                </div>
+            <!-- Multiple Sheet Selector (Shared) -->
+            <div class="sheet-selector-container" id="sheet-selector-container" style="display: none; margin-top: 1rem;">
+                <label for="sheet-selector">Pilih Sheet Excel / Form:</label>
+                <select id="sheet-selector" class="glass-select">
+                    <!-- Dynamic sheet options populated via JS -->
+                </select>
             </div>
 
             <!-- Single Employee Selector Dropdown (Shown after parsing) -->
@@ -1185,6 +1204,7 @@ Latifah		M	M	L	L	P"></textarea>
             
             // Find active tab button and activate it
             const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+                (tabId === 'gsheet-tab' && btn.textContent.includes('Google')) ||
                 (tabId === 'paste-tab' && btn.textContent.includes('Salin')) ||
                 (tabId === 'upload-tab' && btn.textContent.includes('Unggah'))
             );
@@ -1354,6 +1374,89 @@ Latifah		M	M	L	L	P"></textarea>
             };
             reader.readAsArrayBuffer(file);
         }
+
+        // 4b. LOAD GOOGLE SHEET WORKBOOK STATE
+        function handleGoogleSheetWorkbook(workbook) {
+            currentWorkbook = workbook;
+
+            // Show sheet selector
+            sheetSelector.innerHTML = '';
+            workbook.SheetNames.forEach(sheetName => {
+                const option = document.createElement('option');
+                option.value = sheetName;
+                option.textContent = sheetName;
+                sheetSelector.appendChild(option);
+            });
+
+            sheetSelectorContainer.style.display = 'flex';
+
+            // Parse the first sheet by default
+            loadExcelSheet(workbook.SheetNames[0]);
+        }
+
+        // 4c. CONNECT GOOGLE SHEET VIA LINK LISTENER
+        const btnGsheetConnect = document.getElementById('btn-gsheet-connect');
+        const gsheetUrlInput = document.getElementById('gsheet-url');
+
+        btnGsheetConnect.addEventListener('click', async () => {
+            const urlValue = gsheetUrlInput.value.trim();
+            if (!urlValue) {
+                alert("Silakan masukkan link Google Sheet terlebih dahulu.");
+                return;
+            }
+
+            // Regex to extract Spreadsheet ID from Google Sheet URL
+            const match = urlValue.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (!match) {
+                alert("Format link Google Sheet tidak valid. Silakan salin link utuh dari browser.");
+                return;
+            }
+            const spreadsheetId = match[1];
+
+            // Show loading state
+            const originalHTML = btnGsheetConnect.innerHTML;
+            btnGsheetConnect.disabled = true;
+            btnGsheetConnect.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin" style="animation: spin 1s linear infinite; margin-right: 8px; display: inline-block; vertical-align: middle;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 4H18v3"></path>
+                </svg>
+                Menghubungkan ke Google Sheets...
+            `;
+
+            // Simple spin animation stylesheet injector (just in case)
+            if (!document.getElementById('spin-keyframes')) {
+                const style = document.createElement('style');
+                style.id = 'spin-keyframes';
+                style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+                document.head.appendChild(style);
+            }
+
+            const exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=xlsx`;
+
+            try {
+                const response = await fetch(exportUrl);
+                if (!response.ok) {
+                    throw new Error(`Google Sheets membalas dengan status: ${response.status}. Pastikan hak akses bagikan sudah disetel ke 'Siapa saja dengan link dapat melihat' (Read-Only).`);
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+                
+                // Hide file info block if a file was previously uploaded (to avoid layout confusion)
+                fileInfo.style.display = 'none';
+
+                // Handle the loaded workbook
+                handleGoogleSheetWorkbook(workbook);
+
+            } catch (err) {
+                console.error("Google Sheet fetch failed:", err);
+                alert(`Gagal memuat Google Sheet:\n${err.message || err}`);
+            } finally {
+                // Restore button state
+                btnGsheetConnect.disabled = false;
+                btnGsheetConnect.innerHTML = originalHTML;
+            }
+        });
 
         // Parse a specific Excel sheet
         function loadExcelSheet(sheetName) {
