@@ -641,8 +641,9 @@
         }
 
         #export-wallpaper-card {
-            position: relative; /* Change from fixed to relative to render within the infinite-space wrapper */
-            display: flex; /* Kept display:flex so html2canvas can render it perfectly instead of blank */
+            position: relative;
+            display: flex;
+            flex-direction: column;
             width: 1080px;
             height: 1920px;
             background: #090d16;
@@ -652,15 +653,15 @@
                 radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95) 0px, #090d16 100%);
             color: #ffffff;
             font-family: 'Poppins', sans-serif;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 180px 60px 100px 60px; /* Lowered top-padding from 120px to 180px */
+            padding: 160px 60px 100px 60px;
             box-sizing: border-box;
+            gap: 0;
         }
 
         .export-header {
             text-align: center;
-            margin-bottom: 50px;
+            flex-shrink: 0;
+            margin-bottom: 40px;
         }
 
         .export-header .brand-tag {
@@ -669,16 +670,16 @@
             color: var(--accent-primary);
             text-transform: uppercase;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .export-header h2 {
             font-size: 64px;
             font-weight: 800;
             letter-spacing: 2.5px;
-            color: #ffffff; /* Solid professional white */
-            text-shadow: 0 4px 20px rgba(99, 102, 241, 0.45); /* distinct subtle deep-indigo backdrop glow */
-            margin-bottom: 15px;
+            color: #ffffff;
+            text-shadow: 0 4px 20px rgba(99, 102, 241, 0.45);
+            margin-bottom: 12px;
             text-transform: uppercase;
         }
 
@@ -688,30 +689,41 @@
             font-weight: 500;
         }
 
+        /* Calendar area grows to fill all available vertical space between header and footer */
         .export-content {
+            flex: 1 1 0;
             display: flex;
-            align-items: center;
+            align-items: stretch;
             justify-content: center;
             width: 100%;
-            margin: 50px 0;
+            min-height: 0;
+            padding: 30px 0;
         }
 
-        /* Large Grid optimized for Wallpaper width (No Tables!) */
+        /* Calendar grid container — stretches to fill available flex space */
         .export-table-container {
             width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
             background: rgba(17, 24, 39, 0.6);
             backdrop-filter: blur(25px);
             border: 2px solid rgba(255, 255, 255, 0.12);
             border-radius: 32px;
             padding: 40px;
             box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
+            box-sizing: border-box;
         }
 
+        /* Grid fills the container height, rows auto-sized to share space equally */
         .export-calendar-grid {
+            flex: 1;
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 20px;
+            grid-auto-rows: 1fr;
+            gap: 14px;
             width: 100%;
+            min-height: 0;
         }
 
         .export-grid-header {
@@ -729,8 +741,8 @@
             color: #ff1744;
         }
 
+        /* Cells grow to fill the row height defined by grid-auto-rows: 1fr */
         .export-grid-cell {
-            aspect-ratio: 1 / 1.18;
             border-radius: 16px;
             padding: 16px;
             display: flex;
@@ -738,7 +750,7 @@
             justify-content: space-between;
             border: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(255, 255, 255, 0.02);
-            position: relative;
+            min-height: 0;
         }
 
         .export-grid-cell.empty {
@@ -805,13 +817,14 @@
             color: #ff1744 !important;
         }
 
-        /* Wallpaper Footer & Legend - Spacious 2-Row Layout */
+        /* Footer — never grows, always at bottom */
         .export-footer {
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 40px;
+            gap: 30px;
             border-top: 2px solid rgba(255, 255, 255, 0.1);
-            padding-top: 45px;
+            padding-top: 40px;
         }
 
         .export-legend-container {
@@ -973,39 +986,18 @@
             color: #94a3b8;
         }
 
-        /* Wallpaper Aspect Ratio Overrides (Keeps Layout Proportional & Safe for notches) */
+        /* Aspect ratio overrides — only adjust card height & safe-zone padding.
+           No cell aspect-ratio overrides needed: the grid fills remaining space automatically. */
         #export-wallpaper-card.ratio-iphone {
-            height: 2340px; /* iPhone 19.5:9 standard screen height */
-            padding-top: 250px; /* Lowered further from 200px for safe-zone notch buffer */
-            padding-bottom: 120px;
-        }
-
-        #export-wallpaper-card.ratio-iphone .export-grid-cell {
-            aspect-ratio: 1 / 1.10; /* Clean vertical stretch tailored to fit iPhone lockscreen layouts */
-            padding: 18px 14px;
-        }
-        #export-wallpaper-card.ratio-iphone .export-cell-date {
-            font-size: 26px; /* High-readability lockscreen size */
-        }
-        #export-wallpaper-card.ratio-iphone .export-cell-badge {
-            font-size: 42px; /* High-readability badge size */
+            height: 2340px;
+            padding-top: 220px; /* notch / Dynamic Island safe zone */
+            padding-bottom: 140px; /* home bar safe zone */
         }
 
         #export-wallpaper-card.ratio-android {
-            height: 2400px; /* Android 20:9 standard screen height */
-            padding-top: 260px; /* Lowered further from 210px for safe-zone punch buffer */
-            padding-bottom: 130px;
-        }
-
-        #export-wallpaper-card.ratio-android .export-grid-cell {
-            aspect-ratio: 1 / 1.12; /* Pristine vertical ratio tailored for tall 20:9 flagship Androids */
-            padding: 20px 14px;
-        }
-        #export-wallpaper-card.ratio-android .export-cell-date {
-            font-size: 28px;
-        }
-        #export-wallpaper-card.ratio-android .export-cell-badge {
-            font-size: 45px;
+            height: 2400px;
+            padding-top: 200px; /* punch-hole / status bar safe zone */
+            padding-bottom: 140px; /* gesture bar safe zone */
         }
     </style>
 </head>
