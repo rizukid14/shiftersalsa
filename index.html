@@ -923,9 +923,9 @@
             border-bottom-color: rgba(0, 0, 0, 0.08);
         }
 
-        #export-wallpaper-card.theme-light .export-grid-cell {
+        #export-wallpaper-card.theme-light .export-grid-cell:not([class*="shift-"]) {
             border-color: rgba(0, 0, 0, 0.06);
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.85);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
         }
 
@@ -937,7 +937,7 @@
             color: rgba(0, 0, 0, 0.15) !important;
         }
 
-        #export-wallpaper-card.theme-light .export-cell-date {
+        #export-wallpaper-card.theme-light .export-grid-cell:not([class*="shift-"]) .export-cell-date {
             color: #64748b;
         }
 
