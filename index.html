@@ -795,11 +795,11 @@
         .export-grid-cell.shift-M .export-cell-badge { color: var(--color-m-text); }
 
         .export-grid-cell.shift-L {
-            background: var(--color-l-bg);
+            background: rgba(255, 255, 255, 0.03);
             border: 2px solid rgba(255, 255, 255, 0.05);
         }
-        .export-grid-cell.shift-L .export-cell-date { color: var(--color-l-text); text-decoration: line-through; }
-        .export-grid-cell.shift-L .export-cell-badge { color: var(--color-l-text); font-size: 16px; text-decoration: line-through; opacity: 0.8; }
+        .export-grid-cell.shift-L .export-cell-date { color: rgba(255, 255, 255, 0.3); text-decoration: line-through; }
+        .export-grid-cell.shift-L .export-cell-badge { color: rgba(255, 255, 255, 0.25); font-size: 20px; text-decoration: line-through; }
 
         .export-grid-cell.sunday-cell {
             border: 3px solid #ff1744 !important;
@@ -909,7 +909,7 @@
         }
 
         #export-wallpaper-card.theme-light .export-header p {
-            color: #64748b;
+            color: #475569; /* Darker slate for readability */
         }
 
         #export-wallpaper-card.theme-light .export-header .brand-tag {
@@ -919,8 +919,8 @@
         }
 
         #export-wallpaper-card.theme-light .export-grid-header {
-            color: #64748b;
-            border-bottom-color: rgba(0, 0, 0, 0.08);
+            color: #1e293b !important; /* Bold, deep charcoal instead of faint blue-gray */
+            border-bottom: 3px solid rgba(30, 41, 59, 0.12) !important; /* Solid, crisp slate border separator */
         }
 
         #export-wallpaper-card.theme-light .export-grid-cell:not([class*="shift-"]) {
@@ -942,16 +942,16 @@
         }
 
         #export-wallpaper-card.theme-light .export-grid-cell.shift-L {
-            background: #e2e8f0;
-            border-color: rgba(0, 0, 0, 0.02);
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.03);
         }
 
         #export-wallpaper-card.theme-light .export-grid-cell.shift-L .export-cell-date {
-            color: #64748b;
+            color: rgba(0, 0, 0, 0.25);
         }
 
         #export-wallpaper-card.theme-light .export-grid-cell.shift-L .export-cell-badge {
-            color: #64748b;
+            color: rgba(0, 0, 0, 0.2);
         }
 
         #export-wallpaper-card.theme-light .export-footer {
