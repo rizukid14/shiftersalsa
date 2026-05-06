@@ -1502,6 +1502,15 @@ Latifah		M	M	L	L	P"></textarea>
 
         // 6. PROCESS PARSED DATA & INITIALIZE STATE
         function processAndRenderState(parsed) {
+            // Read currently selected employee name, if any
+            let previousSelectedName = null;
+            if (scheduleData && selectedEmployeeId) {
+                const prevEmp = scheduleData.employees.find(emp => emp.id === selectedEmployeeId);
+                if (prevEmp) {
+                    previousSelectedName = prevEmp.name;
+                }
+            }
+
             scheduleData = parsed;
             
             // Populates single employee selector options
@@ -1513,10 +1522,21 @@ Latifah		M	M	L	L	P"></textarea>
                 employeeSelector.appendChild(option);
             });
 
-            // Set default selected employee to the first one in the list
-            if (scheduleData.employees.length > 0) {
+            // Find matching employee in the new sheet's list by name (case-insensitive)
+            let matchedEmp = null;
+            if (previousSelectedName) {
+                matchedEmp = scheduleData.employees.find(emp => emp.name.toLowerCase() === previousSelectedName.toLowerCase());
+            }
+
+            // Set selected employee ID to the matched employee or the first one in the list
+            if (matchedEmp) {
+                selectedEmployeeId = matchedEmp.id;
+                employeeSelector.value = selectedEmployeeId;
+            } else if (scheduleData.employees.length > 0) {
                 selectedEmployeeId = scheduleData.employees[0].id;
                 employeeSelector.value = selectedEmployeeId;
+            } else {
+                selectedEmployeeId = null;
             }
 
             // Render calendar portrait grids
