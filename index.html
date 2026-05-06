@@ -720,8 +720,9 @@
             flex: 1;
             display: grid;
             grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: auto repeat(6, 1fr); /* header = auto, up to 6 data rows = 1fr each */
             grid-auto-rows: 1fr;
-            gap: 14px;
+            gap: 10px;
             width: 100%;
             min-height: 0;
         }
