@@ -653,7 +653,7 @@
                 radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95) 0px, #090d16 100%);
             color: #ffffff;
             font-family: 'Poppins', sans-serif;
-            padding: 160px 60px 100px 60px;
+            padding: 120px 60px 90px 60px;
             box-sizing: border-box;
             gap: 0;
         }
@@ -697,7 +697,7 @@
             justify-content: center;
             width: 100%;
             min-height: 0;
-            padding: 30px 0;
+            padding: 20px 0;
         }
 
         /* Calendar grid container — stretches to fill available flex space */
@@ -715,12 +715,11 @@
             box-sizing: border-box;
         }
 
-        /* Grid fills the container height, rows auto-sized to share space equally */
+        /* Grid fills the container height; gridTemplateRows is set dynamically in JS */
         .export-calendar-grid {
             flex: 1;
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            grid-template-rows: auto repeat(6, 1fr); /* header = auto, up to 6 data rows = 1fr each */
             grid-auto-rows: 1fr;
             gap: 10px;
             width: 100%;
@@ -823,22 +822,22 @@
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 22px;
             border-top: 2px solid rgba(255, 255, 255, 0.1);
-            padding-top: 40px;
+            padding-top: 30px;
         }
 
         .export-legend-container {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 16px;
             width: 100%;
         }
 
         .export-legend-row {
             display: flex;
             justify-content: center;
-            gap: 24px;
+            gap: 16px;
             width: 100%;
         }
 
@@ -846,10 +845,10 @@
             background: rgba(17, 24, 39, 0.45);
             border: 2px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
-            padding: 22px 32px;
+            padding: 16px 24px;
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
             flex: 1;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
@@ -1988,10 +1987,18 @@ Latifah		M	M	L	L	P"></textarea>
             });
 
             // B. CALENDAR GRID PLACEMENT MATHEMATICS
-            // Calculate starting column index using the first day's dayName (e.g. KAMIS -> WEEKDAYS['KAMIS'] = 3)
             const firstColumnObj = columns[0];
             const startDayName = firstColumnObj.dayName;
             const startDayIndex = WEEKDAYS[startDayName] !== undefined ? WEEKDAYS[startDayName] : 0;
+
+            // Calculate exact number of data rows needed (no empty rows at bottom)
+            const totalCells = startDayIndex + columns.length;
+            const numWeekRows = Math.ceil(totalCells / 7);
+
+            // Set grid-template-rows dynamically: header = auto, data rows = 1fr each
+            if (!isInteractive) {
+                targetGrid.style.gridTemplateRows = `auto repeat(${numWeekRows}, 1fr)`;
+            }
 
             // Generate padded cells (empty spacing slots in the first row)
             for (let i = 0; i < startDayIndex; i++) {
@@ -2011,7 +2018,6 @@ Latifah		M	M	L	L	P"></textarea>
                     cell.className = `grid-cell shift-${shiftCode}`;
                     if (col.isSunday) cell.classList.add('sunday-cell');
                     
-                    // Hover tooltips for interactive mode
                     if (shiftCode) {
                         const shiftDetails = SHIFT_INFO[shiftCode] || { label: shiftCode, time: '—' };
                         cell.setAttribute('data-tooltip', `${shiftDetails.label}: ${shiftDetails.time}`);
