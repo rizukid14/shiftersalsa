@@ -656,7 +656,7 @@
             font-family: 'Poppins', sans-serif;
             flex-direction: column;
             justify-content: space-between;
-            padding: 120px 60px 100px 60px;
+            padding: 180px 60px 100px 60px; /* Lowered top-padding from 120px to 180px */
             box-sizing: border-box;
         }
 
@@ -835,18 +835,18 @@
             background: rgba(17, 24, 39, 0.45);
             border: 2px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
-            padding: 22px 30px;
+            padding: 26px 36px;
             display: flex;
             align-items: center;
-            gap: 20px;
-            width: 300px; /* Massive uniform width for balanced look */
+            gap: 24px;
+            width: 360px; /* Uniform spacious width for ultra-high contrast */
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         .export-legend-info {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
             text-align: left;
         }
 
@@ -854,11 +854,11 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 68px; /* Wider and bigger badge */
-            height: 52px;
-            font-size: 22px;
+            width: 80px; /* Bigger legend badge key icon */
+            height: 64px;
+            font-size: 26px;
             font-weight: 800;
-            border-radius: 10px;
+            border-radius: 12px;
             flex-shrink: 0;
         }
 
@@ -874,12 +874,12 @@
 
         .export-legend-title {
             font-weight: 700;
-            font-size: 20px;
+            font-size: 24px; /* Larger title text */
             color: #ffffff;
         }
 
         .export-legend-desc {
-            font-size: 14px;
+            font-size: 17px; /* Larger shift hours text */
             color: #9ca3af;
             font-weight: 500;
         }
@@ -979,14 +979,36 @@
         /* Wallpaper Aspect Ratio Overrides (Keeps Layout Proportional & Safe for notches) */
         #export-wallpaper-card.ratio-iphone {
             height: 2340px; /* iPhone 19.5:9 standard screen height */
-            padding-top: 220px; /* Safe-zone buffer for Dynamic Island & Notch clocks */
-            padding-bottom: 140px; /* Safe-zone buffer for bottom swipe gesture bar */
+            padding-top: 250px; /* Lowered further from 200px for safe-zone notch buffer */
+            padding-bottom: 120px;
+        }
+
+        #export-wallpaper-card.ratio-iphone .export-grid-cell {
+            aspect-ratio: 1 / 1.15; /* Balanced vertical stretch to fill screen without colliding */
+            padding: 18px 14px;
+        }
+        #export-wallpaper-card.ratio-iphone .export-cell-date {
+            font-size: 26px; /* High-readability lockscreen size */
+        }
+        #export-wallpaper-card.ratio-iphone .export-cell-badge {
+            font-size: 42px; /* High-readability badge size */
         }
 
         #export-wallpaper-card.ratio-android {
             height: 2400px; /* Android 20:9 standard screen height */
-            padding-top: 230px; /* Safe-zone buffer for punch-hole cameras & status widgets */
-            padding-bottom: 150px; /* Safe-zone buffer for bottom navigation handles */
+            padding-top: 260px; /* Lowered further from 210px for safe-zone punch buffer */
+            padding-bottom: 130px;
+        }
+
+        #export-wallpaper-card.ratio-android .export-grid-cell {
+            aspect-ratio: 1 / 1.18; /* Perfect vertical stretch to fit 20:9 screen space majestically */
+            padding: 20px 14px;
+        }
+        #export-wallpaper-card.ratio-android .export-cell-date {
+            font-size: 28px;
+        }
+        #export-wallpaper-card.ratio-android .export-cell-badge {
+            font-size: 45px;
         }
     </style>
 </head>
@@ -1224,7 +1246,7 @@ Latifah		M	M	L	L	P"></textarea>
 
         <div class="export-footer">
             <div class="export-legend-container">
-                <!-- Row 1: Pagi, Middle, Sore -->
+                <!-- Row 1: Pagi, Middle -->
                 <div class="export-legend-row">
                     <div class="export-legend-item">
                         <span class="export-shift-badge P">P</span>
@@ -1240,6 +1262,9 @@ Latifah		M	M	L	L	P"></textarea>
                             <span class="export-legend-desc">10.00 – 17.00</span>
                         </div>
                     </div>
+                </div>
+                <!-- Row 2: Sore, Malam -->
+                <div class="export-legend-row">
                     <div class="export-legend-item">
                         <span class="export-shift-badge S">S</span>
                         <div class="export-legend-info">
@@ -1247,9 +1272,6 @@ Latifah		M	M	L	L	P"></textarea>
                             <span class="export-legend-desc">14.00 – 21.00</span>
                         </div>
                     </div>
-                </div>
-                <!-- Row 2: Malam, Libur -->
-                <div class="export-legend-row">
                     <div class="export-legend-item">
                         <span class="export-shift-badge M">M</span>
                         <div class="export-legend-info">
@@ -1257,7 +1279,10 @@ Latifah		M	M	L	L	P"></textarea>
                             <span class="export-legend-desc">21.00 – 07.00</span>
                         </div>
                     </div>
-                    <div class="export-legend-item">
+                </div>
+                <!-- Row 3: Libur (Symmetrically Centered) -->
+                <div class="export-legend-row">
+                    <div class="export-legend-item" style="justify-content: center; width: 380px;">
                         <span class="export-shift-badge L">L</span>
                         <div class="export-legend-info">
                             <span class="export-legend-title">Libur</span>
